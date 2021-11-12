@@ -155,7 +155,6 @@ def _single_span_plot(g, span_df, ax, inflect, thresh):
         
         for k, boundary in enumerate(span_df.loc[gene, 'sec_deriv'], 1):
             ax.axvline(x=boundary, color='teal', label='sec deriv')
-            # hi
     
     if thresh:
         ax.axhline(y=span_df.loc[gene, 'threshold'], label='threshold', ls='--', color='gray')       
