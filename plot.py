@@ -92,7 +92,6 @@ def plot_span(genes, span_df, reg_dict,
     """
     Plots the gene span behind the regression line for given gene(s)
     
-    
     Parameters
     ----------
     genes: list, array-like
@@ -146,9 +145,10 @@ def _single_reg_plot(gene,reg_dict, ax, interval=True):
     
 def _single_span_plot(g, span_df, ax, inflect, thresh):
     
-    # Draw gene bounds
+    # Draw gene span
     ax.axvspan(span_df.loc[g, 'span'][0], span_df.loc[g, 'span'][1], alpha=0.3, color='darkseagreen', label='gene span')
     
+    # plot inflection points
     if inflect:
         for k, boundary in enumerate(span_df.loc[gene, 'first_deriv'], 1):
             ax.axvline(x=boundary, color='salmon', label='first deriv')
@@ -156,6 +156,7 @@ def _single_span_plot(g, span_df, ax, inflect, thresh):
         for k, boundary in enumerate(span_df.loc[gene, 'sec_deriv'], 1):
             ax.axvline(x=boundary, color='teal', label='sec deriv')
     
+    # plot threshold used for span
     if thresh:
         ax.axhline(y=span_df.loc[gene, 'threshold'], label='threshold', ls='--', color='gray')       
     
