@@ -87,7 +87,7 @@ def plot_reg(reg_dict, genes, adata, expr_df,
     
 def plot_span(genes, span_df, reg_dict, 
               inflect=False, thresh=False, 
-              save=False, outfile=None)
+              save=False, outfile=None):
 
     """
     Plots the gene span behind the regression line for given gene(s)
