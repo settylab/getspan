@@ -13,6 +13,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/settylab/getspan',
+    package_dir={"": "src"},
     packages=['getspan'],
     install_requires=[
         "pandas>=1.3.2",
