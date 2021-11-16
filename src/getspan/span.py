@@ -13,7 +13,7 @@ import pickle
 
 
 def calc_reg(adata, genes,  pseudo_axis_key, 
-             res=200, std=True
+             res=200, std=True,
              smooth=False, length_scale=0.2, 
              save=False, pickle_file=None):
     
