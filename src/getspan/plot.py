@@ -72,13 +72,12 @@ def plot_reg(reg_dict, genes, adata, imp_expr_df, pseudo_axis_key,
                     cpalette = adata.uns[cpalette_key]
                 else:
                     cpalette = 'Spectral_r'
-                sns.scatterplot(data=adata.obs, x=adata.obs[pseudo_axis_key], y=imp_expr_df[g], hue=color_by, palette=cpalette, alpha=0.75, ax=ax)
-                
+                sns.scatterplot(data=adata.obs, x=adata.obs[pseudo_axis_key], y=imp_expr_df[g], hue=color_by, palette=cpalette, alpha=0.75, ax=ax)   
             else:
                 sns.scatterplot(x=adata.obs[pseudo_axis_key], y=imp_expr_df[g], color='gainsboro', alpha=0.75, ax=ax)
-            _single_reg_plot(g,reg_dict,ax, interval=False)
-        else:
             _single_reg_plot(g,reg_dict,ax, interval=True)
+        else:
+            _single_reg_plot(g,reg_dict,ax, interval=False)
             
         if plot_span:
             _single_span_plot(g, gene_spans, ax)
@@ -158,14 +157,14 @@ def _single_span_plot(gene, span_df, ax, inflect, thresh):
     # plot inflection points
     if inflect:
         for k, boundary in enumerate(span_df.loc[gene, 'first_deriv'], 1):
-            ax.axvline(x=boundary, color='salmon', label='first deriv')
+            ax.axvline(x=boundary, color='salmon')
         
         for k, boundary in enumerate(span_df.loc[gene, 'sec_deriv'], 1):
-            ax.axvline(x=boundary, color='teal', label='sec deriv')
+            ax.axvline(x=boundary, color='teal')
     
     # plot threshold used for span
     if thresh:
-        ax.axhline(y=span_df.loc[gene, 'threshold'], label='threshold', ls='--', color='gray')       
+        ax.axhline(y=span_df.loc[gene, 'threshold'], ls='--', color='gray')       
     ax.set_title(gene)
     
     plt.legend().remove()
