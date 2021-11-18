@@ -143,7 +143,7 @@ def _single_reg_plot(gene,reg_dict, ax, interval=True):
     # shade the area within one standard deviation of the trend line
     if interval:
         ax.fill_between(reg_dict[gene]['pseudo_axis'], reg_dict[gene]['low_b'], reg_dict[gene]['up_b'],
-                        alpha=0.3, color='light ')
+                        alpha=0.3, color='lightgrey')
 
     # plot annotations
     ax.set_title(gene)
