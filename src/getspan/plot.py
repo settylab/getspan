@@ -18,7 +18,7 @@ warnings.filterwarnings(action="ignore", module="matplotlib", message="findfont"
 def plot_reg(reg_dict, genes, adata, imp_expr_df, pseudo_axis_key,
              plot_span=False, gene_spans=None, ncols=3, 
              save=False, outfile=None, normalized=False,  
-             color_cells=False, color_by=None, cpalette=None):
+             color_cells=False, color_by=None, cpalette_key=None):
     """
     Plots the regression line for the given genes
     For a normalized regression plot, individual cells will not be plotted
@@ -167,7 +167,6 @@ def _single_span_plot(gene, span_df, ax, inflect, thresh):
         ax.axhline(y=span_df.loc[gene, 'threshold'], ls='--', color='gray')       
     ax.set_title(gene)
     
-    plt.legend().remove()
     sns.despine()
     
         
