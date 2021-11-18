@@ -91,7 +91,7 @@ def plot_reg(reg_dict, genes, adata, imp_expr_df, pseudo_axis_key,
     
 
 def plot_span(genes, span_df, reg_dict, ncols=3,
-              inflect=False, thresh=False, legend=False
+              inflect=False, thresh=False, legend=False,
               save=False, outfile=None):
 
     """
