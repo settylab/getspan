@@ -81,9 +81,18 @@ def plot_reg(reg_dict, genes, adata, imp_expr_df, pseudo_axis_key,
         
         _single_reg_plot(g,reg_dict,ax)
         
+    
+    for ax in axes.flat[(len(genes)):]:
+        ax.remove()
+    
+    
     if save:
         fig.savefig(outfile, bbox_inches='tight', dpi=200)
 
+        
+        
+        
+        
     
 def plot_span(genes, span_df, reg_dict, 
               inflect=False, thresh=False, 
@@ -138,8 +147,6 @@ def _single_reg_plot(gene,reg_dict, ax, interval=True):
 
     # plot annotations
     ax.set_title(gene)
-    ax.set_xticks([0, 1])
-    ax.set_yticks([0, 1])
 
     sns.despine()
     
@@ -160,7 +167,7 @@ def _single_span_plot(gene, span_df, ax, inflect, thresh):
     # plot threshold used for span
     if thresh:
         ax.axhline(y=span_df.loc[gene, 'threshold'], label='threshold', ls='--', color='gray')       
-    
+    ax.set_title(gene)
     sns.despine()
     
         
