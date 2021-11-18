@@ -15,11 +15,10 @@ matplotlib.rcParams['image.cmap'] = 'Spectral_r'
 warnings.filterwarnings(action="ignore", module="matplotlib", message="findfont")
 
 
-def plot_reg(reg_dict, genes, adata, expr_df, 
+def plot_reg(reg_dict, genes, adata, imp_expr_df, pseudo_axis_key,
              plot_span=False, gene_spans=None, ncols=3, 
-             normalized=False, pseudo_axis_key=None, 
-             color_cells=False, color_by=None, cpalette=None, 
-             save=False, outfile=None):
+             save=False, outfile=None, normalized=False,  
+             color_cells=False, color_by=None, cpalette=None):
     """
     Plots the regression line for the given genes
     For a normalized regression plot, individual cells will not be plotted
@@ -31,31 +30,32 @@ def plot_reg(reg_dict, genes, adata, expr_df,
         gene:DataFrame containing predicted expression values against pseudo-axis
     genes: list 
         gene names contained in ``reg_dict``
-    expr_df: pandas.DataFrame
-        cell by gene expression values
-    plot_span: bool
-        Whether to plot the gene span 
-    gene_spans: pandas.DataFrame
-        Columns with gene span, threshold and derivative points
-    
-    # following are only needed if 'normalized=False'
-    normalized: bool
-        Whether plotting a normalized regression line
     adata: AnnData
         Cells by genes
     pseudo_axis_key: String
         Key in adata.obs specifying the pseudo-axis values
-    color_cells: bool
-        Whether to color the cells by an ``adata.obs`` annotation
-    color_by: string
-        Key in adata.obs by which to color cells
-    cpalette_key: string
-        If ``color_by`` is categorical, the key in ``adata.uns`` for color palette
+    imp_expr_df: pandas.DataFrame
+        cell by gene imputed expression values
+    plot_span: bool, default: False
+        Whether to plot the gene span 
+    gene_spans: pandas.DataFrame
+        Columns with gene span, threshold and derivative points
+    ncols: int, default: 3
+        Number of columns in plot
     save: bool, default: False
         Whether to save the outputted plot
     outfile: String, default: None
-        If ``save``, path to outfile, ending in .png    
+        If ``save``, path to outfile, ending in .png  
     
+    # following are only needed if 'normalized=False'
+    normalized: bool, default: False
+        Whether plotting a normalized regression line
+    color_cells: bool, default: False
+        Whether to color the cells by an ``adata.obs`` annotation
+    color_by: string, default: None
+        Key in adata.obs by which to color cells
+    cpalette_key: string, default: None
+        If ``color_by`` is categorical, the key in ``adata.uns`` for color palette
     """
     
     # set up figure
