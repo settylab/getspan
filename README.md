@@ -29,7 +29,7 @@ You will be prompted for your username and password.
 Here the token is saved in an environmental variable `GITHUB_TOKEN`
 
 ```
-pip install git+https://${GITHUB_TOKEN}@github.com/user/project.git
+pip install git+https://${GITHUB_TOKEN}@github.com/settylab/getspan.git
 ```
 
 4. Clone the repo and install:

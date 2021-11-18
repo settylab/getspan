@@ -79,15 +79,15 @@ def calc_reg(adata, genes,  pseudo_axis_key,
         
         # predict expression values 
         if std:
-            predictions, stds = gp.predict(pred_ap_2d, return_std=True)
-            df = pd.DataFrame({'pseudo_axis': pred_ap,
+            predictions, stds = gp.predict(pred_ax_2d, return_std=True)
+            df = pd.DataFrame({'pseudo_axis': pred_ax,
                                'expression': predictions,
                                'std': stds,
                                'low_b': predictions - stds, 
                                'up_b': predictions + stds})
         else:
-            predictions = gp.predict(pred_ap_2d, return_std=False)
-            df = pd.DataFrame({'pseudo_axis': pred_ap,
+            predictions = gp.predict(pred_ax_2d, return_std=False)
+            df = pd.DataFrame({'pseudo_axis': pred_ax,
                                'expression': predictions})
     
         results[gene] = df
