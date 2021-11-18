@@ -56,7 +56,7 @@ def calc_reg(adata, genes,  pseudo_axis_key,
     if imputed:
         expr_df = pd.DataFrame(adata.obsm['MAGIC_imputed_data'], columns=adata.var_names, index=adata.obs_names)
     else:
-        if isparse(adata.X):
+        if issparse(adata.X):
             expr_df = pd.DataFrame(adata.X.A, columns=adata.var_names, index=adata.obs_names)
         else:
             expr_df = pd.DataFrame(adata.X, columns=adata.var_names, index=adata.obs_names)
