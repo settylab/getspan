@@ -73,18 +73,16 @@ def plot_reg(reg_dict, genes, adata, imp_expr_df, pseudo_axis_key,
                 else:
                     cpalette = 'Spectral_r'
                 sns.scatterplot(data=adata.obs, x=adata.obs[pseudo_axis_key], y=imp_expr_df[g], hue=color_by, palette=cpalette, alpha=0.75, ax=ax)
+                _single_reg_plot(g,reg_dict,ax, interval=False)
             else:
                 sns.scatterplot(x=adata.obs[pseudo_axis_key], y=imp_expr_df[g], color='gainsboro', alpha=0.75, ax=ax)
+                _single_reg_plot(g,reg_dict,ax, interval=True)
             
         if plot_span:
             _single_span_plot(g, gene_spans, ax)
         
-        _single_reg_plot(g,reg_dict,ax)
-        
-    
     for ax in axes.flat[(len(genes)):]:
         ax.remove()
-    
     
     if save:
         fig.savefig(outfile, bbox_inches='tight', dpi=200)
@@ -127,6 +125,9 @@ def plot_span(genes, span_df, reg_dict, ncols=3,
         _single_span_plot(g, span_df, ax, inflect, thresh)
 
         _single_reg_plot(g, reg_dict, ax, interval=False)
+    
+    for ax in axes.flat[(len(genes)):]:
+        ax.remove()
         
     if save:
         fig.savefig(outfile, bbox_inches='tight', dpi=200)
@@ -144,7 +145,6 @@ def _single_reg_plot(gene,reg_dict, ax, interval=True):
 
     # plot annotations
     ax.set_title(gene)
-
     sns.despine()
     
     
@@ -165,6 +165,8 @@ def _single_span_plot(gene, span_df, ax, inflect, thresh):
     if thresh:
         ax.axhline(y=span_df.loc[gene, 'threshold'], label='threshold', ls='--', color='gray')       
     ax.set_title(gene)
+    
+    plt.legend().remove()
     sns.despine()
     
         
