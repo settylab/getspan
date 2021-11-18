@@ -13,7 +13,6 @@ getspan is implemented in Python3. It can be installed with `pip` via one of the
 
 ```
 pip install git+ssh://git@github.com/settylab/getspan.git
-
 ```
 2. With just your username and password:
 
