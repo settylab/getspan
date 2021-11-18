@@ -127,7 +127,6 @@ def calc_span(gexpr_dict, thresh=0.2):
     for gene in norm_gexpr:
 
         gdf = norm_gexpr[gene]
-        
         gene_span.loc[gene, 'threshold'] = thresh
 
         step_size = (gdf['pseudo_axis'][1] - gdf['pseudo_axis'][0]).round(6)        
@@ -135,8 +134,8 @@ def calc_span(gexpr_dict, thresh=0.2):
         valid_locs = gdf.loc[gdf['expression'] >= thresh]['pseudo_axis'].values
 
         # first derivative inflection points:
-        first_deriv = np.gradient(gdf['expression'], step_size)    
-        fd_zero = np.where(np.diff(np.sign(first_deriv)))[0]        
+        first_deriv = np.gradient(gdf['expression'], step_size)   
+        fd_zero = np.where(np.diff(np.sign(first_deriv)))[0]       
         fd_zero_p = gdf.iloc[fd_zero]['pseudo_axis'].values
         
         gene_span.loc[gene, 'first_deriv'] = fd_zero_p
