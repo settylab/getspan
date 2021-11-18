@@ -121,7 +121,7 @@ def calc_span(gexpr_dict, thresh=0.2):
 
     norm_gexpr = _normalize_regs(gexpr_dict)
     
-    gene_span = pd.DataFrame(index=norm_gexpr.keys(), columns=['span', 'first_deriv', 'sec_deriv', 'thresh'])
+    gene_span = pd.DataFrame(index=norm_gexpr.keys(), columns=['span', 'first_deriv', 'sec_deriv', 'threshold'])
     
     
     for gene in norm_gexpr:
