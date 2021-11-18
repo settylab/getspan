@@ -125,28 +125,29 @@ def plot_span(genes, span_df, reg_dict,
     if save:
         fig.savefig(outfile, bbox_inches='tight', dpi=200)
 
+        
 def _single_reg_plot(gene,reg_dict, ax, interval=True):
     
-    sns.lineplot(x=reg_dict[g]['pseudo_axis'], y=reg_dict[g]['expression'], 
+    sns.lineplot(x=reg_dict[gene]['pseudo_axis'], y=reg_dict[gene]['expression'], 
                      color='darkslategray', lw=1, ax=ax)
         
     # shade the area within one standard deviation of the trend line
     if interval:
-        ax.fill_between(reg_dict[g]['pseudo_axis'], reg_dict[g]['low_b'], reg_dict[g]['up_b'],
+        ax.fill_between(reg_dict[gene]['pseudo_axis'], reg_dict[gene]['low_b'], reg_dict[gene]['up_b'],
                         alpha=0.3, color='cadetblue')
 
     # plot annotations
-    ax.set_title(g)
+    ax.set_title(gene)
     ax.set_xticks([0, 1])
     ax.set_yticks([0, 1])
 
     sns.despine()
     
     
-def _single_span_plot(g, span_df, ax, inflect, thresh):
+def _single_span_plot(gene, span_df, ax, inflect, thresh):
     
     # Draw gene span
-    ax.axvspan(span_df.loc[g, 'span'][0], span_df.loc[g, 'span'][1], alpha=0.3, color='darkseagreen', label='gene span')
+    ax.axvspan(span_df.loc[gene, 'span'][0], span_df.loc[gene, 'span'][1], alpha=0.3, color='darkseagreen', label='gene span')
     
     # plot inflection points
     if inflect:
