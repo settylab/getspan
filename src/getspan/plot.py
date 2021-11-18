@@ -72,7 +72,8 @@ def plot_reg(reg_dict, genes, adata, imp_expr_df, pseudo_axis_key,
                     cpalette = adata.uns[cpalette_key]
                 else:
                     cpalette = 'Spectral_r'
-                sns.scatterplot(data=adata.obs, x=adata.obs[pseudo_axis_key], y=imp_expr_df[g], hue=color_by, palette=cpalette, alpha=0.55, ax=ax, legend=False)   
+                sns.scatterplot(data=adata.obs, x=adata.obs[pseudo_axis_key], y=imp_expr_df[g], hue=color_by, palette=cpalette, alpha=0.55, ax=ax, legend='auto')  
+                
             else:
                 sns.scatterplot(x=adata.obs[pseudo_axis_key], y=imp_expr_df[g], color='gainsboro', alpha=0.5, ax=ax)
             _single_reg_plot(g,reg_dict,ax, interval=True)
@@ -84,6 +85,12 @@ def plot_reg(reg_dict, genes, adata, imp_expr_df, pseudo_axis_key,
         
     for ax in axes.flat[(len(genes)):]:
         ax.remove()
+    
+    if color_cells:
+        for ax in axes.flat[:len(genes)-1]:
+            ax.get_legend().remove()
+
+        plt.legend(bbox_to_anchor=(1.0, 1.0))
     
     if save:
         fig.savefig(outfile, bbox_inches='tight', dpi=200)
@@ -143,7 +150,7 @@ def _single_reg_plot(gene,reg_dict, ax, interval=True):
     # shade the area within one standard deviation of the trend line
     if interval:
         ax.fill_between(reg_dict[gene]['pseudo_axis'], reg_dict[gene]['low_b'], reg_dict[gene]['up_b'],
-                        alpha=0.3, color='lightgrey')
+                        alpha=0.3, color='slategrey')
 
     # plot annotations
     ax.set_title(gene)
