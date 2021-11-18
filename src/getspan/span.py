@@ -7,13 +7,14 @@ import warnings
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKernel
 
+from scipy.sparse import issparse
 from tqdm.auto import tqdm
 
 import pickle
 
 
 def calc_reg(adata, genes,  pseudo_axis_key, 
-             res=200, std=True,
+             imputed=True, res=200, std=True,
              smooth=False, length_scale=0.2, 
              save=False, pickle_file=None):
     
@@ -50,9 +51,13 @@ def calc_reg(adata, genes,  pseudo_axis_key,
     results = {}
     
     # Retrieve the imputed gene expression
-    expr_df = pd.DataFrame(adata.obsm['MAGIC_imputed_data'], 
-                           columns=adata.var_names, index=adata.obs_names)
-    
+    if imputed:
+        expr_df = pd.DataFrame(adata.obsm['MAGIC_imputed_data'], columns=adata.var_names, index=adata.obs_names)
+    else:
+        if isparse(adata.X):
+            expr_df = pd.DataFrame(adata.X.A, columns=adata.var_names, index=adata.obs_names)
+        else:
+            expr_df = pd.DataFrame(adata.X, columns=adata.var_names, index=adata.obs_names)
     # Initialize kernel specifying covariance function for the GaussianProcessRegressor
     
     if smooth:

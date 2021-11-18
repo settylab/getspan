@@ -20,7 +20,8 @@ setup(
         "sklearn",
         "tqdm>=4.32.2",
         "matplotlib>=3.4.2",
-        "seaborn>=0.11.1"
+        "seaborn>=0.11.1",
+        "scipy>=1.6.3"
     ],
      python_requires=">=3.6"
 )
