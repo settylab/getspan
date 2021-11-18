@@ -29,6 +29,8 @@ def calc_reg(adata, genes,  pseudo_axis_key,
         genes to compute regression for. Must be in ``adata.var_names``
     pseudo_axis_key: String
         Key in ``adata.obs`` annotating each cell's pseudo-axis value
+    imputed: bool, default: True
+        Whether to use imputed gene expression
     res: int, default: 200
         Resolution of Gaussian Process Regression
     std: bool, default: True
