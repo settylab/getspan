@@ -73,10 +73,12 @@ def plot_reg(reg_dict, genes, adata, imp_expr_df, pseudo_axis_key,
                 else:
                     cpalette = 'Spectral_r'
                 sns.scatterplot(data=adata.obs, x=adata.obs[pseudo_axis_key], y=imp_expr_df[g], hue=color_by, palette=cpalette, alpha=0.75, ax=ax)
-                _single_reg_plot(g,reg_dict,ax, interval=False)
+                
             else:
                 sns.scatterplot(x=adata.obs[pseudo_axis_key], y=imp_expr_df[g], color='gainsboro', alpha=0.75, ax=ax)
-                _single_reg_plot(g,reg_dict,ax, interval=True)
+            _single_reg_plot(g,reg_dict,ax, interval=False)
+        else:
+            _single_reg_plot(g,reg_dict,ax, interval=True)
             
         if plot_span:
             _single_span_plot(g, gene_spans, ax)
