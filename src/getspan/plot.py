@@ -88,13 +88,8 @@ def plot_reg(reg_dict, genes, adata, imp_expr_df, pseudo_axis_key,
     
     if save:
         fig.savefig(outfile, bbox_inches='tight', dpi=200)
-
-        
-        
-        
-        
     
-def plot_span(genes, span_df, reg_dict, 
+def plot_span(genes, span_df, reg_dict, ncols=3,
               inflect=False, thresh=False, 
               save=False, outfile=None):
 
@@ -109,6 +104,8 @@ def plot_span(genes, span_df, reg_dict,
         gene by columns: ['span', 'first_deriv', 'sec_deriv', 'thresh']
     reg_dict: dict
         gene:DataFrame containing predicted expression values against pseudo-axis
+    ncols: int, default: 3
+        Number of columns in plot
     inflect: bool, default: False
         Whether to plot the inflection points of the first and second derivative
         Salmon: first derivative
