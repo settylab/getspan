@@ -119,7 +119,7 @@ def calc_span(gexpr_dict, thresh=0.2):
     
     """
 
-    norm_gexpr = _normalize_regs(gexpr_dict)
+    norm_gexpr = normalize_regs(gexpr_dict)
     
     gene_span = pd.DataFrame(index=norm_gexpr.keys(), columns=['span', 'first_deriv', 'sec_deriv', 'threshold'])
     
@@ -218,9 +218,7 @@ def calc_span(gexpr_dict, thresh=0.2):
     
     return gene_span
     
-
-
-def _normalize_regs(reg_dict):
+def normalize_regs(reg_dict):
     """
     Performs max-min normalization of gene trend
     

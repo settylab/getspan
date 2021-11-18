@@ -151,7 +151,7 @@ def _single_reg_plot(gene,reg_dict, ax, interval=True):
 def _single_span_plot(gene, span_df, ax, inflect, thresh):
     
     # Draw gene span
-    ax.axvspan(span_df.loc[gene, 'span'][0], span_df.loc[gene, 'span'][1], alpha=0.3, color='darkseagreen', label='gene span')
+    ax.axvspan(span_df.loc[gene, 'span'][0], span_df.loc[gene, 'span'][1], alpha=0.3, color='darkseagreen')
     
     # plot inflection points
     if inflect:
