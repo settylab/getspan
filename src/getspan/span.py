@@ -108,6 +108,7 @@ def calc_span(gexpr_dict, thresh=0.2):
     ----------
     gexpr_dict: dict
         Contains DataFrames with predicted expression. Recommended: smoother regression 
+      
     thresh: float, default: 0.2
         Value from 0.0 - 1.0 specifying preliminary threshold to consider a gene expressed
     
@@ -129,14 +130,14 @@ def calc_span(gexpr_dict, thresh=0.2):
         
         gene_span.loc[gene, 'threshold'] = thresh
 
-        step_size = (gdf[pseudo_axis][1] - gdf[pseudo_axis][0]).round(6)        
+        step_size = (gdf['pseudo_axis'][1] - gdf['pseudo_axis'][0]).round(6)        
         
-        valid_locs = gdf.loc[gdf['expression'] >= thresh][pseudo_axis].values
+        valid_locs = gdf.loc[gdf['expression'] >= thresh]['pseudo_axis'].values
 
         # first derivative inflection points:
         first_deriv = np.gradient(gdf['expression'], step_size)    
         fd_zero = np.where(np.diff(np.sign(first_deriv)))[0]        
-        fd_zero_p = gdf.iloc[fd_zero][pseudo_axis].values
+        fd_zero_p = gdf.iloc[fd_zero]['pseudo_axis'].values
         
         gene_span.loc[gene, 'first_deriv'] = fd_zero_p
 
@@ -144,7 +145,7 @@ def calc_span(gexpr_dict, thresh=0.2):
         # second derivative inflection points:
         sec_deriv = np.gradient(first_deriv, step_size)
         sd_zero = np.where(np.diff(np.sign(sec_deriv)))[0] 
-        sd_zero_p = gdf.iloc[sd_zero][pseudo_axis].values
+        sd_zero_p = gdf.iloc[sd_zero]['pseudo_axis'].values
         
         gene_span.loc[gene, 'sec_deriv'] = sd_zero_p
 
@@ -170,11 +171,11 @@ def calc_span(gexpr_dict, thresh=0.2):
             lb = 0
             hb = 1
             
-            mean = gdf.loc[gdf[pseudo_axis].apply(lambda x: np.logical_and(x >= ranges[0], x <= ranges[1]))]['expression'].mean()
+            mean = gdf.loc[gdf['pseudo_axis'].apply(lambda x: np.logical_and(x >= ranges[0], x <= ranges[1]))]['expression'].mean()
             #dist = ranges[1] - ranges[0]
             
             for i in range(2, len(ranges), 2):
-                new_mean = gdf.loc[gdf[pseudo_axis].apply(lambda x: np.logical_and(x >= ranges[i], x <= ranges[i+1]))]['expression'].mean()    
+                new_mean = gdf.loc[gdf['pseudo_axis'].apply(lambda x: np.logical_and(x >= ranges[i], x <= ranges[i+1]))]['expression'].mean()    
                 if new_mean > mean:
                     mean = new_mean
                     lb = i
