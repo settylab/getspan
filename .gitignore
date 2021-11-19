@@ -1,1 +1,6 @@
 .ipynb_checkpoints/
+notebooks/tutorial.pickle
+Pipfile
+Pipfile.lock
+build/
+src/getspan.egg-info/
