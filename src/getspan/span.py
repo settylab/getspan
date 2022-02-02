@@ -225,7 +225,7 @@ def calc_span(gexpr_dict, thresh=0.2):
     
     return gene_span
     
-def normalize_regs(reg_dict):
+def normalize_regs(reg_dict,pseudo_axis_key='pseudo_axis'):
     """
     Performs max-min normalization of gene trend
     
@@ -244,8 +244,8 @@ def normalize_regs(reg_dict):
     
     for gene in reg_dict:
         
-        df = pd.DataFrame(columns=['pseudo_axis', 'expression'])
-        df['pseudo_axis'] = reg_dict[gene]['pseudo_axis']
+        df = pd.DataFrame(columns=[pseudo_axis_key, 'expression'])
+        df[pseudo_axis_key] = reg_dict[gene][pseudo_axis_key]
 
         max_expr = reg_dict[gene]['expression'].max()
         min_expr = reg_dict[gene]['expression'].min()
