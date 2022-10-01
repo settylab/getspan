@@ -14,9 +14,10 @@ import pickle
 
 
 def calc_reg(adata, genes,  pseudo_axis_key, 
-             imputed=True, res=200, std=True,
-             smooth=False, length_scale=0.2, 
-             save=False, pickle_file=None):
+             imputed=True, scaled=False, res=200, std=True,
+             smooth=False, length_scale=0.2, ls_bounds=(1e-2,1e2),
+             constant_bounds='fixed', noise_level=(1e-5, 1e5), 
+             save=True, pickle_file='trends.pickle'):
     
     """
     Function to calulate a Gaussian Process Regression for given list of genes
@@ -31,6 +32,8 @@ def calc_reg(adata, genes,  pseudo_axis_key,
         Key in ``adata.obs`` annotating each cell's pseudo-axis value
     imputed: bool, default: True
         Whether to use imputed gene expression
+    scaled: bool, default: False
+        When ``imputed=True``, indicates whether to use scaled data
     res: int, default: 200
         Resolution of Gaussian Process Regression
     std: bool, default: True
@@ -39,9 +42,15 @@ def calc_reg(adata, genes,  pseudo_axis_key,
         Whether to compute a smoother regression line at a fixed length scale
     length_scale: float
         If ``smooth``, fixed length_scale for RBF kernel, determines length of deviation from data
-    save: bool, default: False
+    ls_bounds: pair of floats, default: (1e-2, 1e2)
+        The lower and upper bound on ``length_scale`` for the RBF kernel when ``smooth=False``
+    constant_bounds: pair of floats or "fixed", default="fixed"
+        The lower and upper bound on ``constant_value`` for the Constant kernel. If set to "fixed", remains unchanged during tuning
+    noise_level: pair of floats or "fixed", default: (1e-5, 1e5)
+        The lower and upper bound on ``noise_level``. If set to "fixed", remains unchanged during tuning
+    save: bool, default: True
         Whether to save the resulting dictionary to a pickle file after each GPR calculation. Recommended for long lists of genes 
-    pickle_file: String, default: None
+    pickle_file: String, default: trends.pickle
         If ``save``, file path ending in .pickle to write to
     
     Returns
@@ -54,7 +63,10 @@ def calc_reg(adata, genes,  pseudo_axis_key,
     
     # Retrieve the imputed gene expression
     if imputed:
-        expr_df = pd.DataFrame(adata.obsm['MAGIC_imputed_data'], columns=adata.var_names, index=adata.obs_names)
+        if scaled:
+            expr_df = pd.DataFrame(adata.obsm['scaled_MAGIC_imputed_data'], columns=adata.var_names, index=adata.obs_names)
+        else:
+            expr_df = pd.DataFrame(adata.obsm['MAGIC_imputed_data'], columns=adata.var_names, index=adata.obs_names)
     else:
         if issparse(adata.X):
             expr_df = pd.DataFrame(adata.X.A, columns=adata.var_names, index=adata.obs_names)
@@ -63,9 +75,9 @@ def calc_reg(adata, genes,  pseudo_axis_key,
     # Initialize kernel specifying covariance function for the GaussianProcessRegressor
     
     if smooth:
-        kernel = C(1.0, constant_value_bounds='fixed') * RBF(length_scale, 'fixed') + WhiteKernel()
+        kernel = C(1.0, constant_value_bounds=constant_bounds) * RBF(length_scale, 'fixed') + WhiteKernel(noise_level_bounds=noise_level)
     else:
-        kernel = C(1.0, constant_value_bounds='fixed') * RBF(1, (1e-2, 1e2)) + WhiteKernel() 
+        kernel = C(1.0, constant_value_bounds=constant_bounds) * RBF(1, ls_bounds) + WhiteKernel(noise_level_bounds=noise_level) 
     
     
     # retrieve the pseudo axis from adata
