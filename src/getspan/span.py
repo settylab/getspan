@@ -11,6 +11,7 @@ from scipy.sparse import issparse
 from tqdm.auto import tqdm
 from joblib import Parallel, delayed
 import joblib
+import time
 
 import pickle
 
@@ -106,18 +107,19 @@ def calc_reg(adata, genes,  pseudo_axis_key,
         #    with open(pickle_file, 'wb') as handle:
         #        pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
-     
+    start = time.time()
     res = Parallel(n_jobs=n_jobs, verbose=6)(
         delayed(_compute_trend)(
-            gene, expr_df,ps_ax, pred_ax,kernel
+            gene, expr_df,ps_ax, pred_ax,kernel, std
         )
         for gene in genes
     )
-    
+    end = time.time()
+    print(f'time elapsed: {(end - start) / 60} minutes')
     results = {gene:df for (gene, df) in res}
     return results
 
-def _compute_trend(gene, expr_df, ps_ax, pred_ax, kernel):
+def _compute_trend(gene, expr_df, ps_ax, pred_ax, kernel,std):
     pred_ax_2d = pred_ax.reshape(pred_ax.shape[0], 1) # reshape into 2D array
     gp = GaussianProcessRegressor(kernel=kernel)
     expr = expr_df[gene]
