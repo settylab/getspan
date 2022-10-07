@@ -70,7 +70,6 @@ def calc_reg(adata, genes,  pseudo_axis_key,
         else:
             expr_df = pd.DataFrame(adata.obsm['GeneScores'], columns = adata.uns['GeneScoresColumns'], index = adata.obs_names)
     elif imputed:
-    if imputed:
         if scaled:
             expr_df = pd.DataFrame(adata.obsm['scaled_MAGIC_imputed_data'], columns=adata.var_names, index=adata.obs_names)
         else:
