@@ -17,7 +17,7 @@ def calc_reg(adata, genes,  pseudo_axis_key,
              imputed=True, scaled=False, res=200, std=True,
              smooth=False, length_scale=0.2, ls_bounds=(1e-2,1e2),
              constant_bounds='fixed', noise_level=(1e-5, 1e5), 
-             save=True, pickle_file='trends.pickle'):
+             save=True, pickle_file='trends.pickle', atac = False ):
     
     """
     Function to calulate a Gaussian Process Regression for given list of genes
@@ -52,7 +52,9 @@ def calc_reg(adata, genes,  pseudo_axis_key,
         Whether to save the resulting dictionary to a pickle file after each GPR calculation. Recommended for long lists of genes 
     pickle_file: String, default: trends.pickle
         If ``save``, file path ending in .pickle to write to
-    
+    atac: bool, default: False
+        indicates if the input data is scATAC-seq gene scores instead of scRNA-seq gene expression and annotates dataframe columns with correct labels.
+        No option for using scaled data at this time.
     Returns
     -------
     results: dict
@@ -62,6 +64,12 @@ def calc_reg(adata, genes,  pseudo_axis_key,
     results = {}
     
     # Retrieve the imputed gene expression
+    if atac:
+        if imputed:
+            expr_df = pd.DataFrame(adata.obsm['MAGIC_imputed_GeneScores'], columns = adata.uns['GeneScoresColumns'], index = adata.obs_names)
+        else:
+            expr_df = pd.DataFrame(adata.obsm['GeneScores'], columns = adata.uns['GeneScoresColumns'], index = adata.obs_names)
+    elif imputed:
     if imputed:
         if scaled:
             expr_df = pd.DataFrame(adata.obsm['scaled_MAGIC_imputed_data'], columns=adata.var_names, index=adata.obs_names)
