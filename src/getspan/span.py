@@ -9,6 +9,8 @@ from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKern
 
 from scipy.sparse import issparse
 from tqdm.auto import tqdm
+from joblib import Parallel, delayed
+import joblib
 
 import pickle
 
@@ -107,7 +109,7 @@ def calc_reg(adata, genes,  pseudo_axis_key,
      
     res = Parallel(n_jobs=n_jobs, verbose=6)(
         delayed(_compute_trend)(
-            gene, expr_df,ps_ax, pred_ax
+            gene, expr_df,ps_ax, pred_ax,kernel
         )
         for gene in genes
     )
@@ -115,7 +117,7 @@ def calc_reg(adata, genes,  pseudo_axis_key,
     results = {gene:df for (gene, df) in res}
     return results
 
-def _compute_trend(gene, expr_df, ps_ax, pred_ax):
+def _compute_trend(gene, expr_df, ps_ax, pred_ax, kernel):
     pred_ax_2d = pred_ax.reshape(pred_ax.shape[0], 1) # reshape into 2D array
     gp = GaussianProcessRegressor(kernel=kernel)
     expr = expr_df[gene]
