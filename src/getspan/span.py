@@ -6,10 +6,13 @@ import warnings
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKernel
+from sklearn import exceptions
 
 from scipy.sparse import issparse
 from tqdm.auto import tqdm
-
+from joblib import Parallel, delayed
+import joblib
+import time
 import pickle
 
 
@@ -17,7 +20,7 @@ def calc_reg(adata, genes,  pseudo_axis_key,
              imputed=True, scaled=False, res=200, std=True,
              smooth=False, length_scale=0.2, ls_bounds=(1e-2,1e2),
              constant_bounds='fixed', noise_level=(1e-5, 1e5), 
-             save=True, pickle_file='trends.pickle', atac = False ):
+             save=True, pickle_file='trends.pickle', atac=False, n_jobs=-1):
     
     """
     Function to calulate a Gaussian Process Regression for given list of genes
@@ -53,16 +56,19 @@ def calc_reg(adata, genes,  pseudo_axis_key,
     pickle_file: String, default: trends.pickle
         If ``save``, file path ending in .pickle to write to
     atac: bool, default: False
-        indicates if the input data is scATAC-seq gene scores instead of scRNA-seq gene expression and annotates dataframe columns with correct labels.
+        Indicates if the input data is scATAC-seq gene scores and annotates dataframe columns with correct labels
+    n_jobs: int, default: -1
+        Number of jobs for parallel processing
+    
     Returns
     -------
     results: dict
         Dictionary of DataFrames containing predicted regression and confidence interval
     """
     
-    results = {}
     
-    # Retrieve the imputed gene expression
+    # Format expression data
+
     if atac:
         if imputed:
             if scaled:
@@ -95,36 +101,50 @@ def calc_reg(adata, genes,  pseudo_axis_key,
     
     # initialize values for predicted axis
     pred_ax = np.linspace(ps_ax.min(), ps_ax.max(), res)
-    pred_ax_2d = pred_ax.reshape(pred_ax.shape[0], 1) # reshape into 2D array
      
-    
     # Calculate GPR for each gene
-    for gene in tqdm(genes, total=len(genes)):
-        gp = GaussianProcessRegressor(kernel=kernel)
-        expr = expr_df[gene]
-       
+        #if save:
+        #    with open(pickle_file, 'wb') as handle:
+        #        pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+    start = time.time()
+    res = Parallel(n_jobs=n_jobs, verbose=6)(
+        delayed(_compute_trend)(
+            gene, expr_df,ps_ax, pred_ax,kernel,std
+        )
+        for gene in genes
+    )
+    end = time.time()
+    print(f"time to finish:{(end-start)/60} minutes")
+    results = {gene:df for (gene, df) in res}
+    return results
+
+def _compute_trend(gene, expr_df, ps_ax, pred_ax, kernel, std):
+    warnings.filterwarnings("ignore", category = exceptions.ConvergenceWarning)
+    
+    pred_ax_2d = pred_ax.reshape(pred_ax.shape[0], 1) # reshape into 2D array
+    gp = GaussianProcessRegressor(kernel=kernel)
+    expr = expr_df[gene]
+    try:
         gp.fit(ps_ax, expr)
-        
-        # predict expression values 
+    
+    except exceptions.ConvergenceWarning as e:
+        print(f'Error with gene: {gene}')
+        print(e)
+    finally:
+        gp.fit(ps_ax,expr)
         if std:
             predictions, stds = gp.predict(pred_ax_2d, return_std=True)
             df = pd.DataFrame({'pseudo_axis': pred_ax,
                                'expression': predictions,
                                'std': stds,
-                               'low_b': predictions - stds, 
+                               'low_b': predictions - stds,
                                'up_b': predictions + stds})
         else:
             predictions = gp.predict(pred_ax_2d, return_std=False)
             df = pd.DataFrame({'pseudo_axis': pred_ax,
                                'expression': predictions})
-    
-        results[gene] = df
-        
-        if save:
-            with open(pickle_file, 'wb') as handle:
-                pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    
-    return results
+        return gene, df
 
 def calc_span(gexpr_dict, thresh=0.2):
     
@@ -210,7 +230,11 @@ def calc_span(gexpr_dict, thresh=0.2):
             ranges = [ranges[lb], ranges[hb]]
         else:
             # just take the only span that exists
-            ranges = [valid_locs[0], valid_locs[-1]]
+            try:
+                ranges = [valid_locs[0], valid_locs[-1]]
+            except:
+                print('No valid span for: {gene}, returning empty span')
+                ranges = []
         
         # Use first derivative as span boundaries
         fd_zero_p = np.sort(fd_zero_p)
