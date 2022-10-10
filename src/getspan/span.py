@@ -65,7 +65,7 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
     
     
     # Format expression data
-    if data key is not None:
+    if data_key is not None:
         expr_df = pd.DataFrame(adata.obsm[data_key], index = adata.obs_names)
         if atac:
             expr_df.columns = adata.uns['GeneScoresColumns']
