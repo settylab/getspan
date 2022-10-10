@@ -16,11 +16,10 @@ import time
 import pickle
 
 
-def calc_reg(adata, genes,  pseudo_axis_key, 
-             imputed=True, scaled=False, res=200, std=True,
-             smooth=False, length_scale=0.2, ls_bounds=(1e-2,1e2),
+def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False, 
+             std=True, smooth=False, length_scale=0.2, ls_bounds=(1e-2,1e2),
              constant_bounds='fixed', noise_level=(1e-5, 1e5), 
-             save=True, pickle_file='trends.pickle', atac=False, n_jobs=-1):
+             save=True, pickle_file='trends.pickle', n_jobs=-1):
     
     """
     Function to calulate a Gaussian Process Regression for given list of genes
@@ -33,12 +32,12 @@ def calc_reg(adata, genes,  pseudo_axis_key,
         genes to compute regression for. Must be in ``adata.var_names``
     pseudo_axis_key: String
         Key in ``adata.obs`` annotating each cell's pseudo-axis value
-    imputed: bool, default: True
-        Whether to use imputed gene expression
-    scaled: bool, default: False
-        When ``imputed=True``, indicates whether to use scaled data
     res: int, default: 200
         Resolution of Gaussian Process Regression
+    data_key: String, default: None
+        Key in ``adata.obsm`` annotating data matrix to use
+    atac: bool, default: False
+        Indicates if the input data is scATAC-seq gene scores and annotates dataframe columns with correct labels
     std: bool, default: True
         Whether to calculate standard deviate and confidence interval
     smooth: bool, default: False
@@ -55,8 +54,6 @@ def calc_reg(adata, genes,  pseudo_axis_key,
         Whether to save the resulting dictionary to a pickle file after each GPR calculation. Recommended for long lists of genes 
     pickle_file: String, default: trends.pickle
         If ``save``, file path ending in .pickle to write to
-    atac: bool, default: False
-        Indicates if the input data is scATAC-seq gene scores and annotates dataframe columns with correct labels
     n_jobs: int, default: -1
         Number of jobs for parallel processing
     
@@ -68,27 +65,16 @@ def calc_reg(adata, genes,  pseudo_axis_key,
     
     
     # Format expression data
-
-    if atac:
-        if imputed:
-            if scaled:
-                expr_df = pd.DataFrame(adata.obsm['scaled_MAGIC_imputed_GeneScores'], columns = adata.uns['GeneScoresColumns'], index = adata.obs_names)
-            else:
-                expr_df = pd.DataFrame(adata.obsm['MAGIC_imputed_GeneScores'], columns = adata.uns['GeneScoresColumns'], index = adata.obs_names)
+    if data key is not None:
+        expr_df = pd.DataFrame(adata.obsm[data_key], index = adata.obs_names)
+        if atac:
+            expr_df.columns = adata.uns['GeneScoresColumns']
         else:
-            expr_df = pd.DataFrame(adata.obsm['GeneScores'], columns = adata.uns['GeneScoresColumns'], index = adata.obs_names)
-    elif imputed:
-        if scaled:
-            expr_df = pd.DataFrame(adata.obsm['scaled_MAGIC_imputed_data'], columns=adata.var_names, index=adata.obs_names)
-        else:
-            expr_df = pd.DataFrame(adata.obsm['MAGIC_imputed_data'], columns=adata.var_names, index=adata.obs_names)
+            expr_df.columns = adata.var_names
     else:
-        if issparse(adata.X):
-            expr_df = pd.DataFrame(adata.X.A, columns=adata.var_names, index=adata.obs_names)
-        else:
-            expr_df = pd.DataFrame(adata.X, columns=adata.var_names, index=adata.obs_names)
-    # Initialize kernel specifying covariance function for the GaussianProcessRegressor
+        expr_df = adata.to_df()
     
+    # Initialize kernel specifying covariance function for the GaussianProcessRegressor
     if smooth:
         kernel = C(1.0, constant_value_bounds=constant_bounds) * RBF(length_scale, 'fixed') + WhiteKernel(noise_level_bounds=noise_level)
     else:
