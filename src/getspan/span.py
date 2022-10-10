@@ -89,20 +89,21 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
     pred_ax = np.linspace(ps_ax.min(), ps_ax.max(), res)
      
     # Calculate GPR for each gene
-        #if save:
-        #    with open(pickle_file, 'wb') as handle:
-        #        pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    
     start = time.time()
-    res = Parallel(n_jobs=n_jobs, verbose=6)(
+    trend_res = Parallel(n_jobs=n_jobs, verbose=6)(
         delayed(_compute_trend)(
             gene, expr_df,ps_ax, pred_ax,kernel,std
         )
         for gene in genes
     )
     end = time.time()
-    print(f"time to finish:{(end-start)/60} minutes")
-    results = {gene:df for (gene, df) in res}
+    print(f"time to finish:{(end-start) / 60} minutes")
+    results = {gene:df for (gene, df) in trend_res}
+    
+    if save:
+        with open(pickle_file, 'wb') as handle:
+            pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
     return results
 
 def _compute_trend(gene, expr_df, ps_ax, pred_ax, kernel, std):
