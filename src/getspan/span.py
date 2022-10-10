@@ -6,13 +6,13 @@ import warnings
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKernel
+from sklearn import exceptions
 
 from scipy.sparse import issparse
 from tqdm.auto import tqdm
 from joblib import Parallel, delayed
 import joblib
 import time
-
 import pickle
 
 
@@ -110,35 +110,41 @@ def calc_reg(adata, genes,  pseudo_axis_key,
     start = time.time()
     res = Parallel(n_jobs=n_jobs, verbose=6)(
         delayed(_compute_trend)(
-            gene, expr_df,ps_ax, pred_ax,kernel, std
+            gene, expr_df,ps_ax, pred_ax,kernel,std
         )
         for gene in genes
     )
     end = time.time()
-    print(f'time elapsed: {(end - start) / 60} minutes')
+    print(f"time to finish:{(end-start)/60} minutes")
     results = {gene:df for (gene, df) in res}
     return results
 
-def _compute_trend(gene, expr_df, ps_ax, pred_ax, kernel,std):
+def _compute_trend(gene, expr_df, ps_ax, pred_ax, kernel, std):
+    warnings.filterwarnings("ignore", category = exceptions.ConvergenceWarning)
+    
     pred_ax_2d = pred_ax.reshape(pred_ax.shape[0], 1) # reshape into 2D array
     gp = GaussianProcessRegressor(kernel=kernel)
     expr = expr_df[gene]
-
-    gp.fit(ps_ax, expr)
-
-    # predict expression values 
-    if std:
-        predictions, stds = gp.predict(pred_ax_2d, return_std=True)
-        df = pd.DataFrame({'pseudo_axis': pred_ax,
-                           'expression': predictions,
-                           'std': stds,
-                           'low_b': predictions - stds,
-                           'up_b': predictions + stds})
-    else:
-        predictions = gp.predict(pred_ax_2d, return_std=False)
-        df = pd.DataFrame({'pseudo_axis': pred_ax,
-                           'expression': predictions})
-    return gene, df
+    try:
+        gp.fit(ps_ax, expr)
+    
+    except exceptions.ConvergenceWarning as e:
+        print(f'Error with gene: {gene}')
+        print(e)
+    finally:
+        gp.fit(ps_ax,expr)
+        if std:
+            predictions, stds = gp.predict(pred_ax_2d, return_std=True)
+            df = pd.DataFrame({'pseudo_axis': pred_ax,
+                               'expression': predictions,
+                               'std': stds,
+                               'low_b': predictions - stds,
+                               'up_b': predictions + stds})
+        else:
+            predictions = gp.predict(pred_ax_2d, return_std=False)
+            df = pd.DataFrame({'pseudo_axis': pred_ax,
+                               'expression': predictions})
+        return gene, df
 
 def calc_span(gexpr_dict, thresh=0.2):
     
@@ -224,7 +230,11 @@ def calc_span(gexpr_dict, thresh=0.2):
             ranges = [ranges[lb], ranges[hb]]
         else:
             # just take the only span that exists
-            ranges = [valid_locs[0], valid_locs[-1]]
+            try:
+                ranges = [valid_locs[0], valid_locs[-1]]
+            except:
+                print('No valid span for: {gene}, returning empty span')
+                ranges = []
         
         # Use first derivative as span boundaries
         fd_zero_p = np.sort(fd_zero_p)

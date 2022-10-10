@@ -3,4 +3,6 @@ notebooks/tutorial.pickle
 Pipfile
 Pipfile.lock
 build/
+dist/
+src/getspan/__pycache__/
 src/getspan.egg-info/
