@@ -12,6 +12,7 @@ from scipy.sparse import issparse
 from tqdm.auto import tqdm
 from joblib import Parallel, delayed
 import joblib
+import contextlib
 import time
 import pickle
 
@@ -90,12 +91,13 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
      
     # Calculate GPR for each gene
     start = time.time()
-    trend_res = Parallel(n_jobs=n_jobs, verbose=6)(
-        delayed(_compute_trend)(
-            gene, expr_df,ps_ax, pred_ax,kernel,std
-        )
-        for gene in genes
-    )
+    with tqdm_joblib(tqdm(desc="GPR", total=len(genes))) as progress_bar:
+        trend_res = Parallel(n_jobs=n_jobs, verbose=6)(
+            delayed(_compute_trend)(
+                gene, expr_df,ps_ax, pred_ax,kernel,std
+            )
+            for gene in genes
+        ) 
     end = time.time()
     print(f"time to finish:{(end-start) / 60} minutes")
     results = {gene:df for (gene, df) in trend_res}
@@ -105,6 +107,26 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
             pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
     
     return results
+
+
+@contextlib.contextmanager
+def tqdm_joblib(tqdm_object):
+    """Context manager to patch joblib to report into tqdm progress bar given as argument"""
+    class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
+        def __call__(self, *args, **kwargs):
+            tqdm_object.update(n=self.batch_size)
+            return super().__call__(*args, **kwargs)
+
+
+
+    old_batch_callback = joblib.parallel.BatchCompletionCallBack
+    joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
+    try:
+        yield tqdm_object
+    finally:
+        joblib.parallel.BatchCompletionCallBack = old_batch_callback
+        tqdm_object.close()
+
 
 def _compute_trend(gene, expr_df, ps_ax, pred_ax, kernel, std):
     warnings.filterwarnings("ignore", category = exceptions.ConvergenceWarning)
@@ -132,6 +154,7 @@ def _compute_trend(gene, expr_df, ps_ax, pred_ax, kernel, std):
             df = pd.DataFrame({'pseudo_axis': pred_ax,
                                'expression': predictions})
         return gene, df
+
 
 def calc_span(gexpr_dict, thresh=0.2):
     
