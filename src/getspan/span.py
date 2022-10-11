@@ -17,8 +17,8 @@ import time
 import pickle
 
 
-def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False, 
-             std=True, smooth=False, length_scale=0.2, ls_bounds=(1e-2,1e2),
+def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key='MAGIC_imputed_data', atac=False, 
+             std=True, smooth=False, length_scale=0.2, ls_bounds=(1e-2,1e1),
              constant_bounds='fixed', noise_level=(1e-5, 1e5), 
              save=True, pickle_file='trends.pickle', n_jobs=-1):
     
@@ -28,15 +28,15 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
     Parameters
     ----------
     adata: AnnData
-        Annotated data matrix with pseudo axis and imputed gene expression
+        Annotated data matrix with pseudo axis
     genes: List, array-like
         genes to compute regression for. Must be in ``adata.var_names``
     pseudo_axis_key: String
         Key in ``adata.obs`` annotating each cell's pseudo-axis value
     res: int, default: 200
-        Resolution of Gaussian Process Regression
-    data_key: String, default: None
-        Key in ``adata.obsm`` annotating data matrix to use
+        Resolution of Gaussian Process Regression, equals the number of resulting data points per trend
+    data_key: String, default: 'MAGIC_imputed_data'
+        Key in ``adata.obsm`` specifying data matrix to use
     atac: bool, default: False
         Indicates if the input data is scATAC-seq gene scores and annotates dataframe columns with correct labels
     std: bool, default: True
@@ -45,7 +45,7 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
         Whether to compute a smoother regression line at a fixed length scale
     length_scale: float
         If ``smooth``, fixed length_scale for RBF kernel, determines length of deviation from data
-    ls_bounds: pair of floats, default: (1e-2, 1e2)
+    ls_bounds: pair of floats, default: (1e-2, 1e1)
         The lower and upper bound on ``length_scale`` for the RBF kernel when ``smooth=False``
     constant_bounds: pair of floats or "fixed", default="fixed"
         The lower and upper bound on ``constant_value`` for the Constant kernel. If set to "fixed", remains unchanged during tuning
@@ -79,8 +79,7 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
     if smooth:
         kernel = C(1.0, constant_value_bounds=constant_bounds) * RBF(length_scale, 'fixed') + WhiteKernel(noise_level_bounds=noise_level)
     else:
-        kernel = C(1.0, constant_value_bounds=constant_bounds) * RBF(1, ls_bounds) + WhiteKernel(noise_level_bounds=noise_level) 
-    
+        kernel = C(1.0, constant_value_bounds=constant_bounds) * RBF(1, ls_bounds) + WhiteKernel(noise_level_bounds=noise_level)   
     
     # retrieve the pseudo axis from adata
     ps_ax = adata.obs[pseudo_axis_key].values
@@ -91,7 +90,7 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
      
     # Calculate GPR for each gene
     start = time.time()
-    with tqdm_joblib(tqdm(desc="GPR", total=len(genes))) as progress_bar:
+    with _tqdm_joblib(tqdm(desc="GPR", total=len(genes))) as progress_bar:
         trend_res = Parallel(n_jobs=n_jobs)(
             delayed(_compute_trend)(
                 gene, expr_df,ps_ax, pred_ax,kernel,std
@@ -99,6 +98,7 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
             for gene in genes
         ) 
     end = time.time()
+
     print(f"time to finish:{np.round(((end-start) / 60), decimals=2)} minutes")
     results = {gene:df for (gene, df) in trend_res}
     
@@ -110,14 +110,12 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
 
 
 @contextlib.contextmanager
-def tqdm_joblib(tqdm_object):
+def _tqdm_joblib(tqdm_object):
     """Context manager to patch joblib to report into tqdm progress bar given as argument"""
     class TqdmBatchCompletionCallback(joblib.parallel.BatchCompletionCallBack):
         def __call__(self, *args, **kwargs):
             tqdm_object.update(n=self.batch_size)
             return super().__call__(*args, **kwargs)
-
-
 
     old_batch_callback = joblib.parallel.BatchCompletionCallBack
     joblib.parallel.BatchCompletionCallBack = TqdmBatchCompletionCallback
@@ -157,7 +155,6 @@ def _compute_trend(gene, expr_df, ps_ax, pred_ax, kernel, std):
 
 
 def calc_span(gexpr_dict, thresh=0.2):
-    
     """
     Identifies the span of expression along the pseudo-axis for each gene. 
     Recommened to calculate span based on smoother gene regression trend
@@ -178,9 +175,7 @@ def calc_span(gexpr_dict, thresh=0.2):
     """
 
     norm_gexpr = normalize_regs(gexpr_dict)
-    
     gene_span = pd.DataFrame(index=norm_gexpr.keys(), columns=['span', 'first_deriv', 'sec_deriv', 'threshold'])
-    
     
     for gene in norm_gexpr:
 
@@ -188,7 +183,6 @@ def calc_span(gexpr_dict, thresh=0.2):
         gene_span.loc[gene, 'threshold'] = thresh
 
         step_size = (gdf['pseudo_axis'][1] - gdf['pseudo_axis'][0]).round(6)        
-        
         valid_locs = gdf.loc[gdf['expression'] >= thresh]['pseudo_axis'].values
 
         # first derivative inflection points:
@@ -198,18 +192,15 @@ def calc_span(gexpr_dict, thresh=0.2):
         
         gene_span.loc[gene, 'first_deriv'] = fd_zero_p
 
-
         # second derivative inflection points:
         sec_deriv = np.gradient(first_deriv, step_size)
         sd_zero = np.where(np.diff(np.sign(sec_deriv)))[0] 
         sd_zero_p = gdf.iloc[sd_zero]['pseudo_axis'].values
         
         gene_span.loc[gene, 'sec_deriv'] = sd_zero_p
-
         
         # Look for a non-continuous range:
         break_points = list(np.where(np.diff(valid_locs).round(6) > step_size)[0])
-        
         bps=[]
         for bp in break_points:
             bps.append(valid_locs[bp])
@@ -229,7 +220,6 @@ def calc_span(gexpr_dict, thresh=0.2):
             hb = 1
             
             mean = gdf.loc[gdf['pseudo_axis'].apply(lambda x: np.logical_and(x >= ranges[0], x <= ranges[1]))]['expression'].mean()
-            #dist = ranges[1] - ranges[0]
             
             for i in range(2, len(ranges), 2):
                 new_mean = gdf.loc[gdf['pseudo_axis'].apply(lambda x: np.logical_and(x >= ranges[i], x <= ranges[i+1]))]['expression'].mean()    
@@ -251,12 +241,10 @@ def calc_span(gexpr_dict, thresh=0.2):
         fdp_l = fd_zero_p[fd_zero_p < ranges[0]]
         fdp_h = fd_zero_p[fd_zero_p > ranges[1]]
     
-        
         # Use sec deriv to reduce span:
         sd_zero_p = np.sort(sd_zero_p)
         sdp_l = sd_zero_p[sd_zero_p < ranges[0]]
         sdp_h = sd_zero_p[sd_zero_p > ranges[1]]   
-        
         
         if len(fdp_l) > 0:
             low_bound = fdp_l[-1]
@@ -265,7 +253,6 @@ def calc_span(gexpr_dict, thresh=0.2):
                     low_bound = sdp_l[-1]
                 
             ranges[0] = low_bound 
-
 
         if len(fdp_h) > 0:
             high_bound = fdp_h[0]  
@@ -280,6 +267,7 @@ def calc_span(gexpr_dict, thresh=0.2):
     
     return gene_span
     
+
 def normalize_regs(reg_dict,pseudo_axis_key='pseudo_axis'):
     """
     Performs max-min normalization of gene trend
