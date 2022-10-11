@@ -1,9 +1,5 @@
 # getspan
-
-This package will allow you to compute a gene's span of expression along a pre-computed pseudo-axis (ie. pseudotime, pseudospace). getspan is designed to work with single cell RNA-seq data.
-
-It is recommended to define a specific gene set of interest to calculate spans and trends for, as computing trends and spans for all genes in a dataset will take a significant amount of time.
-
+This package will allow you to compute a gene's span of expression along a pre-computed pseudo-axis (ie. pseudotime, pseudospace). getspan is designed to work with single cell RNA-seq data and ATAC-seq gene scores. Imputed values often yield tighter regressions, however non-imputed input will work as well.
 
 ## Installation
 
@@ -54,7 +50,4 @@ A tutorial on `getspan` usage and demonstration of visualizations can be found i
 
 https://github.com/settylab/getspan/blob/main/notebooks/tutorial.ipynb
 
-Data used in the notebook can be found in `/data/`
-
-
-
+By default, the program will use as many CPUs that is available. If `n_jobs=1`, computing gene trends for a large set of genes can take a significant amount of time. Data used in the notebook can be found in `/data/`. 
