@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     
 setup(
     name='getspan',
-    version='1.0.1',
+    version='1.1.0',
     author='Christine Dien',
     description='To identify gene spans along a pseudo-axis',
     long_description=long_description,

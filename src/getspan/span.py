@@ -92,14 +92,14 @@ def calc_reg(adata, genes,  pseudo_axis_key, res=200, data_key=None, atac=False,
     # Calculate GPR for each gene
     start = time.time()
     with tqdm_joblib(tqdm(desc="GPR", total=len(genes))) as progress_bar:
-        trend_res = Parallel(n_jobs=n_jobs, verbose=6)(
+        trend_res = Parallel(n_jobs=n_jobs)(
             delayed(_compute_trend)(
                 gene, expr_df,ps_ax, pred_ax,kernel,std
             )
             for gene in genes
         ) 
     end = time.time()
-    print(f"time to finish:{(end-start) / 60} minutes")
+    print(f"time to finish:{np.round(((end-start) / 60), decimals=2)} minutes")
     results = {gene:df for (gene, df) in trend_res}
     
     if save:
